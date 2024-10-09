@@ -37,22 +37,31 @@ def get_session(token):
         raise ValueError('Getting session failure.')
     return res.json()
 
-def get_existing_session():
-    return
+def get_existing_session(path):
+    with open(path, 'r') as file:
+        data = json.load(file)
+    return data['session']['key'], data['session']['token']
 
-def save_session(session , token):
-    return
+def save_session(path, session , token):
+    session['session']['token'] = token
+    json_object = json.dumps(session, indent=4)
+ 
+    with open(path, "w") as outfile:
+        outfile.write(json_object)
 
 def authenticate():
     global token
     global session
-    if(Path('./session/session1.json').exists()):
-       token, session = get_existing_session()
+    path = './session/session1.json'
+    if(Path(path).exists()):
+        logging.info(f"[Auth] An existing session found.")
+        token, session = get_existing_session(path)
     else:
+        logging.info(f"[Auth] There is no session found. Will be created a new one.")
         token = get_token()
         auth()
         session = get_session(token)
-        save_session(session, token)
+        save_session(path, session, token)
 
 def get_api_method_signature(method_name):
     global token
@@ -60,7 +69,7 @@ def get_api_method_signature(method_name):
     return md5(method_sign_string.encode('utf-8')).hexdigest()
 
 def scrobble():
-    global token
+    return
     
 
 def nowPlaying():
@@ -68,7 +77,7 @@ def nowPlaying():
     
     
     signature = get_api_method_signature('track.updateNowPlaying')
-    res = requests.post(f"{host}/2.0/?method=track.updateNowPlaying")
+    # res = requests.post(f"{host}/2.0/?method=track.updateNowPlaying")
 
 
 if __name__ == '__main__':
