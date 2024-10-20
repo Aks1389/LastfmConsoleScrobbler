@@ -7,6 +7,7 @@ import logging
 import webbrowser
 import json
 from pathlib import Path
+import id3_tags_reader
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
@@ -56,10 +57,10 @@ def authenticate():
     global session
     path = './session/session1.json'
     if(Path(path).exists()):
-        logging.info(f"[Auth] An existing session found.")
+        logging.info("[Auth] An existing session found.")
         session, token = get_existing_session(path)
     else:
-        logging.info(f"[Auth] There is no session found. Will be created a new one.")
+        logging.info("[Auth] There is no session found. Will be created a new one.")
         token = get_token()
         auth()
         session = get_session(token)
@@ -72,22 +73,24 @@ def get_api_method_signature(params_dict):
     method_sign_string = "".join(method_sign_string) + api_secret
     return md5(method_sign_string.encode('utf-8')).hexdigest()
 
-def scrobble():
-    signature = get_api_method_signature('track.updateNowPlaying')
+def scrobble(track_list):
     body = {
-        
+        "method": "track.scrobble",
         "api_key": api_key,
-        "api_sig": signature,
         "sk": session
         }
+    body.update(track_list)
     headers = {
         "Content-Type": "application/x-www-form-urlencoded"
     }
+
+    signature = get_api_method_signature(body)
+    body['api_sig'] = signature
     res = requests.post(url=f"{host}/2.0/", data=body, headers=headers)
     if not res.status_code == 200:
         print(res.text)
         raise ValueError('Scrobbling didn\'t worked.')
-    logging.info("Scrobbling:" + res.json())
+    logging.info("Scrobbling:" + res.text)
     
 def nowPlaying():
     """api: https://www.last.fm/api/show/track.updateNowPlaying"""
@@ -113,6 +116,12 @@ def nowPlaying():
 
 if __name__ == '__main__':
     authenticate()
-    # scrobble()
+    filepath = input("Enter track-list file path: ")
+    start_time = input("Enter start time(dd-mm-yyyy_hh:mm +0300): ")
+    # filepath = "C:\\Users\\aksnv\\Documents\\Programming\\Last.fm Scrobbler\\tracklist.txt"
+    # start_time = "15-10-2024_19:00 +0300"
+    tracklist = id3_tags_reader.get_track_list(filepath, start_time)
+    
+    scrobble(tracklist)
     # nowPlaying()
     # sys.exit(0)
