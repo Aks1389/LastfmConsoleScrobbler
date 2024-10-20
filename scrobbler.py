@@ -118,10 +118,7 @@ if __name__ == '__main__':
     authenticate()
     filepath = input("Enter track-list file path: ")
     start_time = input("Enter start time(dd-mm-yyyy_hh:mm +0300): ")
-    # filepath = "C:\\Users\\aksnv\\Documents\\Programming\\Last.fm Scrobbler\\tracklist.txt"
-    # start_time = "15-10-2024_19:00 +0300"
     tracklist = id3_tags_reader.get_track_list(filepath, start_time)
     
     scrobble(tracklist)
-    # nowPlaying()
-    # sys.exit(0)
+    sys.exit(0)
